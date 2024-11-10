@@ -73,13 +73,17 @@
 		]
 	},
 	"dependencies": {
+		"date-fns": "^4.1.0",
 		"firebase": "^11.0.1",
+		"flowbite": "^2.5.2",
 		"leaflet": "^1.9.4",
 		"leaflet-control-geocoder": "^2.4.0",
 		"lucide-react": "^0.454.0",
 		"prop-types": "^15.6.1",
-		"react": "^16.8.4",
-		"react-dom": "^16.8.4",
+		"react": "^18.3.1",
+		"react-datepicker": "^7.5.0",
+		"react-dom": "^18.3.1",
+		"react-leaflet": "^4.2.1",
 		"react-polyfills": "0.0.1",
 		"react-router-dom": "^6.3.0"
 	}

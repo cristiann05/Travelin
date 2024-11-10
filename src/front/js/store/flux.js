@@ -88,7 +88,7 @@ const getState = ({ getStore, getActions, setStore }) => {
                         localStorage.setItem('token', data.access_token);
             
                         // Verifica si el perfil está completo
-                        const profileComplete = data.username && data.direccion && data.latitud !== null && data.longitud !== null;
+                        const profileComplete = data.username && data.direccion && data.nombre && data.fecha_de_nacimiento && data.apellidos && data.latitud !== null && data.longitud !== null;
                         console.log('Data del servidor:', data);
                         console.log('Perfil completo:', profileComplete); // Agrega este log
             

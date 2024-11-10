@@ -8,6 +8,7 @@ import Homepage from "./pages/Homepage.jsx";
 import Signup from "./pages/Signup.jsx";
 import Login from "./pages/Login.jsx";
 import CreateProfile from "./pages/CreateProfile.jsx";
+import UpdateProfile from "./pages/UpdateProfile.jsx";
 
 //create your first component
 const Layout = () => {
@@ -27,6 +28,7 @@ const Layout = () => {
                         <Route element={<Signup />} path="/signup" />
                         <Route element={<Login />} path="/login" />
                         <Route element={<CreateProfile />} path="/create-profile" />
+                        <Route element={<UpdateProfile />} path="/update-profile" />
                         <Route element={<h1>Not found!</h1>} />
                     </Routes>
                 </ScrollToTop>

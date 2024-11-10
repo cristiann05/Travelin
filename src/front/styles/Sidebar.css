@@ -1,0 +1,29 @@
+.sidebar-button {
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-button:hover {
+    background-color: #34d399; /* Color de fondo al hacer hover */
+    transform: translateY(-2px); /* Desplazar ligeramente hacia arriba */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Sombra al hacer hover */
+    color: #000; /* Cambiar el color del texto al hacer hover */
+}
+
+.profile-button {
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Transición para el color de fondo y sombra */
+}
+
+.profile-button:hover {
+    background-color: #2aad7d; /* Color verde para el botón de perfil al hacer hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Añadir sombra al hacer hover */
+}
+
+/* Menú desplegable */
+.profile-menu-item {
+    transition: background-color 0.2s ease, color 0.2s ease; /* Transición para el fondo y el color del texto */
+}
+
+.profile-menu-item:hover {
+    background-color: #1f2937; /* Color de fondo al hacer hover en el menú de perfil */
+    color: #ffffff; /* Cambiar el color del texto al hacer hover */
+}

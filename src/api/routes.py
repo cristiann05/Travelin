@@ -2,13 +2,8 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-import json  # Asegúrate de importar el módulo json
-
-#JWT
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from datetime import datetime
 
 api = Blueprint('api', __name__)
 
@@ -31,6 +26,7 @@ def get_user_by_id(user_id):
     
     return jsonify(user.serialize()), 200  
 
+# Actualizar usuario
 @api.route('/usuarios/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
     # Busca el usuario en la base de datos
@@ -43,10 +39,23 @@ def update_user(user_id):
     data = request.get_json()
 
     # Actualiza las propiedades del usuario
-    if 'difficulties' in data:
-        user.difficulties = data['difficulties']  # Se espera que sea un string
-    if 'preferred_languages' in data:
-        user.preferred_languages = data['preferred_languages']  # Se espera que sea un string
+    if 'nombre' in data:
+        user.nombre = data['nombre']
+    if 'apellidos' in data:
+        user.apellidos = data['apellidos']
+    if 'fecha_de_nacimiento' in data:
+        try:
+            user.fecha_de_nacimiento = datetime.strptime(data['fecha_de_nacimiento'], '%d-%m-%Y').date()
+        except ValueError:
+            return jsonify({"msg": "Formato de fecha incorrecto. Use DD-MM-AAAA."}), 400
+    if 'direccion' in data:
+        user.direccion = data['direccion']
+    if 'latitud' in data:
+        user.latitud = data['latitud']
+    if 'longitud' in data:
+        user.longitud = data['longitud']
+    if 'public_id' in data:
+        user.public_id = data['public_id']
 
     # Guarda los cambios en la base de datos
     db.session.commit()
@@ -60,6 +69,10 @@ def register_user():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     username = request.json.get("username", None)  # Obtener el username opcional
+    nombre = request.json.get("nombre", None)  # Nuevo campo para nombre
+    apellidos = request.json.get("apellidos", None)  # Nuevo campo para apellidos
+    fecha_de_nacimiento = request.json.get("fecha_de_nacimiento", None)  # Nuevo campo para fecha de nacimiento
+    public_id = request.json.get("public_id", None)  # Nuevo campo para fecha de nacimiento
 
     # Verifica que los campos no estén vacíos
     if not email or not password:
@@ -71,12 +84,19 @@ def register_user():
         return jsonify({"msg": "El usuario ya existe"}), 400
 
     # Crear nuevo usuario
-    new_user = User(email=email, password=password, username=username)  # Asigna username
+    new_user = User(
+        email=email, 
+        password=password, 
+        username=username, 
+        nombre=nombre, 
+        apellidos=apellidos, 
+        fecha_de_nacimiento=fecha_de_nacimiento,
+        public_id=public_id
+    )
     db.session.add(new_user)
     db.session.commit()
 
     return jsonify({"msg": "Usuario registrado exitosamente"}), 201
-
 
 # Login de usuario
 @api.route('/login', methods=['POST'])
@@ -100,14 +120,17 @@ def login_user():
     # Generar JWT Token
     access_token = create_access_token(identity=user.id)
 
-    # Supongamos que tu modelo de usuario tiene los atributos `username`, `direccion`, `latitud`, y `longitud`
+    # Incluir los nuevos campos `nombre`, `apellidos` y `fecha_de_nacimiento` en la respuesta
     return jsonify({
         "access_token": access_token,
         "user_id": user.id,
-        "username": user.username,        # Asegúrate de que tu modelo de usuario tenga este campo
-        "direccion": user.direccion,      # Lo mismo aquí
-        "latitud": user.latitud,          # Y aquí
-        "longitud": user.longitud          # Y aquí
+        "username": user.username,
+        "nombre": user.nombre,
+        "apellidos": user.apellidos,
+        "fecha_de_nacimiento": user.fecha_de_nacimiento.strftime('%d-%m-%Y') if user.fecha_de_nacimiento else None,
+        "direccion": user.direccion,
+        "latitud": user.latitud,
+        "longitud": user.longitud
     }), 200
 
 # Ruta para crear o actualizar el perfil del usuario
@@ -125,24 +148,33 @@ def create_or_update_profile():
     # Obtiene los datos enviados en la solicitud
     data = request.get_json()
     
-    # Actualiza el nombre de usuario si está presente en los datos
+    # Actualiza los datos del usuario en función de la información proporcionada
     if 'username' in data:
         user.username = data['username']
-    
-    # Actualiza la dirección, latitud y longitud si están presentes en los datos
+    if 'nombre' in data:
+        user.nombre = data['nombre']
+    if 'apellidos' in data:
+        user.apellidos = data['apellidos']
+    if 'fecha_de_nacimiento' in data:
+        try:
+            user.fecha_de_nacimiento = datetime.strptime(data['fecha_de_nacimiento'], '%d-%m-%Y').date()
+        except ValueError:
+            return jsonify({"msg": "Formato de fecha incorrecto. Use DD-MM-AAAA."}), 400
     if 'direccion' in data:
         user.direccion = data['direccion']
     if 'latitud' in data:
         user.latitud = data['latitud']
     if 'longitud' in data:
         user.longitud = data['longitud']
+    if 'public_id' in data:
+        user.public_id = data['public_id']
 
     # Guarda los cambios en la base de datos
     db.session.commit()
 
     return jsonify({"msg": "Perfil actualizado correctamente", "user": user.serialize()}), 200
 
-
-
 if __name__ == '__main__':
-    api.run(debug=True)
+    app = Flask(__name__)
+    app.register_blueprint(api)
+    app.run(debug=True)

@@ -3,8 +3,8 @@ import { HeartIcon, MessageSquare, ShareIcon, BookmarkIcon } from 'lucide-react'
 
 export default function FeedPost({ id, user, location, image, likes, comments, description }) {
   return (
-    <div key={id} className="bg-white rounded-lg shadow">
-      <div className="p-4">
+<div key={id} className="bg-white rounded-lg shadow mr-2">
+<div className="p-4">
         <div className="flex items-center mb-2">
           <img src="/placeholder.svg?height=40&width=40" alt={user} className="w-10 h-10 rounded-full mr-3" />
           <div>
