@@ -101,9 +101,9 @@ const UpdateProfile = () => {
             latitud: lat,
             longitud: lon,
         };
-        
+
         const response = await actions.updateProfile(profileData);
-        
+
         if (response.success) {
             setMessage({ text: "Perfil actualizado con éxito!", type: "success" });
             setTimeout(() => navigate("/dashboard"), 1500); // Redirige al perfil tras 1.5 segundos
@@ -142,11 +142,18 @@ const UpdateProfile = () => {
         }
     };
 
+    // Nueva función para manejar la actualización del nombre de usuario
+    const handleUsernameChange = (e) => {
+        // Limitar el nombre de usuario a 10 caracteres
+        const inputValue = e.target.value.slice(0, 20); // Limita a 10 caracteres
+        setUsername(inputValue); // Actualiza el estado con el valor limitado
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">Actualizar Perfil</h2>
-                
+
                 {/* Mensaje de éxito o error */}
                 {message && (
                     <div
@@ -171,7 +178,7 @@ const UpdateProfile = () => {
                             name="username"
                             type="text"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={handleUsernameChange} // Usamos el manejador para limitar a 10 caracteres
                             placeholder="Introduce tu nuevo nombre de usuario"
                             required
                             className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"

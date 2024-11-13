@@ -1,27 +1,20 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
-import { Context } from "../store/appContext"; // Importa el contexto para acceder a las acciones
+import React, { useState, useEffect, useContext, useRef } from "react"; 
+import { Context } from "../store/appContext";
 import { useNavigate } from "react-router-dom";
-import DatePicker from "react-datepicker"; // Importa el DatePicker
-import "react-datepicker/dist/react-datepicker.css"; // Estilos de DatePicker
-import { es } from "date-fns/locale"; // Importa el locale en español
-import { format } from "date-fns"; // Importa para formatear fechas
 
 const CreateProfile = () => {
     const { actions, store } = useContext(Context);
     const [nombre, setNombre] = useState(store.currentUser?.nombre || "");
     const [apellidos, setApellidos] = useState(store.currentUser?.apellidos || "");
-    const [fechaNacimiento, setFechaNacimiento] = useState(
-        store.currentUser?.fecha_de_nacimiento ? new Date(store.currentUser.fecha_de_nacimiento) : null
-    ); 
-    const [urlImagen, setUrlImagen] = useState(""); // URL de la imagen
+    const [fechaNacimiento, setFechaNacimiento] = useState(store.currentUser?.fecha_de_nacimiento || ""); 
+    const [urlImagen, setUrlImagen] = useState(""); 
     const [message, setMessage] = useState(null);
     const navigate = useNavigate();
-    const fileInputRef = useRef(null); // Referencia al input de archivo
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
-        // Verifica si el usuario está autenticado
         if (!store.currentUser) {
-            navigate("/login"); // Redirige al login si no hay usuario autenticado
+            navigate("/login");
         }
     }, [store.currentUser, navigate]);
 
@@ -31,19 +24,17 @@ const CreateProfile = () => {
         data.append("file", file);
         data.append("upload_preset", "Presents_react");
         data.append("cloud_name", "dhieuyort");
-    
+
         try {
             const response = await fetch("https://api.cloudinary.com/v1_1/dhieuyort/image/upload", {
                 method: "POST",
                 body: data
             });
-    
+
             const result = await response.json();
-            console.log(result);
-    
             if (response.ok) {
                 setUrlImagen(result.secure_url);
-                localStorage.setItem("profileImageUrl", result.secure_url); // Guardar en localStorage
+                localStorage.setItem("profileImageUrl", result.secure_url);
             } else {
                 setMessage({ text: "Error al subir la imagen. Inténtalo de nuevo.", type: "error" });
             }
@@ -55,31 +46,69 @@ const CreateProfile = () => {
 
     const handleDeleteImage = () => {
         setUrlImagen("");
-        fileInputRef.current.value = ""; // Limpiar el input
+        fileInputRef.current.value = "";
     };
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        
-        // Formatear la fecha en el formato DD-MM-AAAA para enviar
-        const formattedDate = fechaNacimiento ? format(fechaNacimiento, 'dd-MM-yyyy') : null;
 
         const profileData = {
             nombre,
             apellidos,
-            fecha_de_nacimiento: formattedDate, // Usa el formato correcto para la fecha
-            public_id: urlImagen // Incluye la URL de la imagen
+            fecha_de_nacimiento: fechaNacimiento,
+            public_id: urlImagen
         };
-        
+
         const response = await actions.updateProfile(profileData);
-        
+
         if (response.success) {
             setMessage({ text: "Perfil actualizado con éxito!", type: "success" });
-            setTimeout(() => navigate("/update-profile"), 1500); // Redirige al perfil tras 1.5 segundos
+            setTimeout(() => navigate("/update-profile"), 1500);
         } else {
             setMessage({ text: response.msg || "Error al actualizar perfil.", type: "error" });
         }
     };
+
+    // Limitar a un total de 3 palabras entre nombre y apellidos, y 8 caracteres por palabra
+    const handleNameChange = (input, setInput, otherInput) => {
+        const allWords = (input + " " + otherInput).trim().split(/\s+/);
+    
+        // Limitar a 3 palabras en total
+        if (allWords.length > 3) {
+            setMessage({ text: "El nombre y apellidos combinados no pueden tener más de 3 palabras en total.", type: "error" });
+    
+            // Eliminar el mensaje después de 3 segundos
+            setTimeout(() => {
+                setMessage(null);
+            }, 5000);
+            return;
+        }
+    
+        // Limitar cada palabra a un máximo de 8 caracteres
+        const limitedWords = input.split(/\s+/).map(word => word.slice(0, 10));
+        setInput(limitedWords.join(" "));
+    };
+    
+
+    const handleFechaNacimientoChange = (e) => {
+        let input = e.target.value.replace(/\D/g, ""); // Solo números, eliminamos otros caracteres.
+    
+        // Limitar a 8 caracteres como máximo para el formato DD-MM-YYYY
+        if (input.length > 8) input = input.slice(0, 8);
+    
+        // Añadir el primer guion después de los dos primeros dígitos (día)
+        if (input.length >= 3) {
+            input = `${input.slice(0, 2)}-${input.slice(2)}`;
+        }
+    
+        // Añadir el segundo guion después de los dos siguientes dígitos (mes)
+        if (input.length >= 6) {
+            input = `${input.slice(0, 5)}-${input.slice(5)}`;
+        }
+    
+        // Actualizamos el estado con el valor formateado
+        setFechaNacimiento(input);
+    };    
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
@@ -104,7 +133,7 @@ const CreateProfile = () => {
                             name="nombre"
                             type="text"
                             value={nombre}
-                            onChange={(e) => setNombre(e.target.value)}
+                            onChange={(e) => handleNameChange(e.target.value, setNombre, apellidos)}
                             placeholder="Introduce tu nombre"
                             required
                             className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -120,7 +149,7 @@ const CreateProfile = () => {
                             name="apellidos"
                             type="text"
                             value={apellidos}
-                            onChange={(e) => setApellidos(e.target.value)}
+                            onChange={(e) => handleNameChange(e.target.value, setApellidos, nombre)}
                             placeholder="Introduce tus apellidos"
                             required
                             className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -129,46 +158,20 @@ const CreateProfile = () => {
 
                     <div>
                         <label htmlFor="fechaNacimiento" className="block text-sm font-medium text-gray-700">
-                            Fecha de Nacimiento
-                        </label>
-                        <DatePicker
-                            selected={fechaNacimiento}
-                            onChange={(date) => setFechaNacimiento(date)}
-                            dateFormat="dd-MM-yyyy" // Formato de fecha
-                            locale={es} // Configura el locale en español
-                            placeholderText="Selecciona tu fecha de nacimiento"
-                            required
-                            className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700">
-                            Imagen de Perfil
+                            Fecha de Nacimiento (DD-MM-YYYY)
                         </label>
                         <input
-                            id="file-upload"
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={changeUploadImage}
+                            id="fechaNacimiento"
+                            name="fechaNacimiento"
+                            type="text"
+                            value={fechaNacimiento}
+                            onChange={handleFechaNacimientoChange}
+                            placeholder="DD-MM-YYYY"
+                            required
+                            maxLength="10" // Limitar a 10 caracteres
                             className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-
-                    {urlImagen && (
-                        <div className="mb-4 text-center">
-                            <img src={urlImagen} alt="Imagen subida" width="200" className="img-preview" />
-                            <button 
-                                type="button" 
-                                onClick={handleDeleteImage} 
-                                className="btn btn-light mt-2"
-                                style={{ border: 'none', background: 'transparent' }}
-                            >
-                                <i className="fa-solid fa-trash" style={{ color: 'red' }}></i>
-                            </button>
-                        </div>
-                    )}
 
                     <button
                         type="submit"

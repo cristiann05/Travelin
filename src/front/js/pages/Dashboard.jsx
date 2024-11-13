@@ -84,8 +84,9 @@ export default function Dashboard() {
 
     if (query.length > 2) {
       try {
+        // Realizar búsqueda con OpenStreetMap o algún servicio de lugares específicos
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&extratags=1`
         );
         const data = await response.json();
 
@@ -96,7 +97,7 @@ export default function Dashboard() {
         setSearchResults(validResults);
         setIsDropdownVisible(validResults.length > 0);
       } catch (error) {
-        console.error('Error al buscar la dirección:', error);
+        console.error('Error al buscar el lugar:', error);
       }
     } else {
       setSearchResults([]);
@@ -105,7 +106,7 @@ export default function Dashboard() {
   };
 
   // Mover mapa a la ubicación seleccionada de la búsqueda con animación suave
-  const handleSelectLocation = (lat, lon) => {
+  const handleSelectLocation = (lat, lon, name) => {
     if (map) {
       // Eliminar marcador previo si existe
       if (userMarker) {
@@ -115,7 +116,7 @@ export default function Dashboard() {
       // Crear un nuevo marcador en la ubicación seleccionada
       const newMarker = L.marker([lat, lon])
         .addTo(map)
-        .bindPopup("Ubicación seleccionada.")
+        .bindPopup(name)
         .openPopup();
 
       setUserMarker(newMarker); // Guardar el nuevo marcador en el estado
@@ -130,7 +131,7 @@ export default function Dashboard() {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && searchResults.length > 0) {
       const firstResult = searchResults[0];
-      handleSelectLocation(firstResult.lat, firstResult.lon);
+      handleSelectLocation(firstResult.lat, firstResult.lon, firstResult.display_name);
     }
   };
 
@@ -235,7 +236,7 @@ export default function Dashboard() {
                   <div
                     key={result.place_id}
                     className="p-2 cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSelectLocation(result.lat, result.lon)}
+                    onClick={() => handleSelectLocation(result.lat, result.lon, result.display_name)}
                   >
                     <p>{result.display_name}</p>
                   </div>
