@@ -1,0 +1,43 @@
+/* Estilos para la página */
+.hero-section {
+    background-color: #f7f7f7;
+    padding: 50px 0;
+    text-align: center;
+  }
+  
+  .features-section {
+    background-color: #ffffff;
+    padding: 50px 0;
+  }
+  
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  .feature-item {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .cta-buttons button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  
+  footer {
+    background-color: #333;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+  }
+  
+  .container {
+    width: 90%;
+    margin: 0 auto;
+  }
+  

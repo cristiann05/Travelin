@@ -1,171 +1,166 @@
-import React, { useState, useContext, useEffect } from "react";
-import { Context } from "../store/appContext";
+import React, { useState, useContext } from 'react';
+import { MailIcon, LockIcon, Plane } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import '../../styles/signup.css';
-import image from '../../img/bg.jpg';
+import { Context } from '../store/appContext';
+import image from '../../img/paisaje2.jpg';  // Importa la imagen correctamente
 
-const Signup = () => {
-    const { actions } = useContext(Context);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [alert, setAlert] = useState({ show: false, message: '', type: '' });
-    const [passwordValidity, setPasswordValidity] = useState({ isValid: false, messages: [] });
-    const [emailValid, setEmailValid] = useState(false);
-    const [formSubmitted, setFormSubmitted] = useState(false);
-    const navigate = useNavigate();
+export default function Signup() {
+  const { actions } = useContext(Context);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [alert, setAlert] = useState({ show: false, message: '', type: '' });
+  const [passwordValidity, setPasswordValidity] = useState({ isValid: false, messages: [] });
+  const [emailValidity, setEmailValidity] = useState(true);
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const navigate = useNavigate();
 
-    // Maneja el envío del formulario
-    const handleSignup = async (e) => {
-        e.preventDefault();
-        setFormSubmitted(true);  // Indicamos que el formulario fue enviado
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
-        if (!passwordValidity.isValid) {
-            setAlert({ show: true, message: 'La contraseña debe cumplir con los requisitos.', type: 'danger' });
-            return;
-        }
-        if (!emailValid) {
-            setAlert({ show: true, message: 'Por favor, ingresa un correo electrónico válido.', type: 'danger' });
-            return;
-        }
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasLetter = /[A-Za-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()]/.test(password);
 
-        const userData = { email, password };
-        const response = await actions.signupUser(userData);
-        if (response.success) {
-            setAlert({ show: true, message: '¡Registro exitoso!', type: 'success' });
-            setTimeout(() => navigate("/login"), 2000);
-        } else {
-            setAlert({ show: true, message: response.msg || 'Error en el registro. Por favor, inténtalo de nuevo.', type: 'danger' });
-        }
+    const messages = [
+      password.length >= minLength ? '✔️ La contraseña tiene al menos 8 caracteres.' : '❌ Debe tener al menos 8 caracteres.',
+      hasLetter ? '✔️ Incluye al menos una letra.' : '❌ Debe incluir una letra.',
+      hasNumber ? '✔️ Incluye al menos un número.' : '❌ Debe incluir un número.',
+      hasSpecialChar ? '✔️ Incluye al menos un carácter especial.' : '❌ Debe incluir un carácter especial.',
+    ];
+
+    return {
+      isValid: password.length >= minLength && hasLetter && hasNumber && hasSpecialChar,
+      messages,
     };
+  };
 
-    // Valida la contraseña
-    const validatePassword = (password) => {
-        const minLength = 8;
-        const hasLetter = /[A-Za-z]/.test(password);
-        const hasNumber = /\d/.test(password);
-        const hasSpecialChar = /[!@#$%^&*()]/.test(password);
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordValidity(validatePassword(newPassword));
+  };
 
-        const messages = [
-            password.length >= minLength ? '✔️ ¡Buena elección! La contraseña tiene al menos 8 caracteres.' : '❌ La contraseña debe tener al menos 8 caracteres.',
-            hasLetter ? '✔️ Incluye al menos una letra.' : '❌ Debe incluir al menos una letra.',
-            hasNumber ? '✔️ Incluye al menos un número.' : '❌ Debe incluir al menos un número.',
-            hasSpecialChar ? '✔️ Incluye al menos un carácter especial.' : '❌ Debe incluir al menos un carácter especial.',
-        ];
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    setEmailValidity(validateEmail(newEmail));
+  };
 
-        return {
-            isValid: password.length >= minLength && hasLetter && hasNumber && hasSpecialChar,
-            messages
-        };
-    };
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
 
-    // Valida el correo electrónico
-    const validateEmail = (email) => {
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        return emailRegex.test(email);
-    };
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setTouched({ email: true, password: true });
 
-    const handlePasswordChange = (e) => {
-        const newPassword = e.target.value;
-        setPassword(newPassword);
-        setPasswordValidity(validatePassword(newPassword));
-    };
+    if (!emailValidity || !passwordValidity.isValid) {
+      return;
+    }
 
-    const handleEmailChange = (e) => {
-        const newEmail = e.target.value;
-        setEmail(newEmail);
-        setEmailValid(validateEmail(newEmail));
-    };
+    const userData = { email, password };
 
-    const closeAlert = () => {
-        setAlert({ show: false, message: '', type: '' });
-    };
+    const response = await actions.signupUser(userData);
+    if (response.success) {
+      setAlert({ show: true, message: '¡Registro exitoso!', type: 'success' });
+      setTimeout(() => navigate('/login'), 2000);
+    } else {
+      setAlert({ show: true, message: response.msg || 'Error en el registro. Por favor, inténtalo de nuevo.', type: 'danger' });
+    }
+  };
 
-    // Evitar el pegado en los campos
-    const preventPaste = (e) => {
-        e.preventDefault();
-    };
+  const closeAlert = () => setAlert({ show: false, message: '', type: '' });
 
-    // Desactivar el autocompletado
-    useEffect(() => {
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.setAttribute('autocomplete', 'off');
-            input.setAttribute('autocorrect', 'off');
-            input.setAttribute('autocapitalize', 'off');
-            input.setAttribute('spellcheck', 'false');
-        });
-    }, []);
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
+      {/* Fondo con la imagen importada */}
+      <div 
+        className="md:w-1/2 h-64 md:h-auto bg-cover bg-center relative"
+        style={{ backgroundImage: `url(${image})` }} // Aquí usamos la imagen importada
+      >
+        {/* Puedes quitar el overlay verde si solo quieres la imagen como fondo */}
+      </div>
 
-    return (
-        <div
-            className="signup-container"
-            style={{ backgroundImage: `url(${image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-        >
-            <form onSubmit={handleSignup} className="signup-form" autoComplete="off">
-                <h1 className="signup-title">Registrarse</h1>
+      {/* El resto del formulario */}
+      <div className="md:w-1/2 bg-white flex items-center justify-center p-4 md:p-8">
+        <div className="w-full max-w-md space-y-6 md:space-y-8">
+          <h2 className="mt-4 md:mt-6 text-center text-4xl font-extrabold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            Únete a la aventura
+          </h2>
 
-                {alert.show && (
-                    <div className={`alert alert-${alert.type} mb-4`}>
-                        {alert.message}
-                        <button onClick={closeAlert}>Cerrar</button>
-                    </div>
-                )}
+          <p className="mt-2 text-center text-gray-700" style={{ fontWeight: '400' }}>
+            Comienza a planear tu próximo viaje
+          </p>
 
-                {/* Correo electrónico */}
-                <div className="input-box">
-                    <i className='bx bxs-user'></i>
-                    <input
-                        type="email"
-                        name="email_fake"
-                        id="email_fake"
-                        placeholder="Correo Electrónico"
-                        value={email}
-                        onChange={handleEmailChange}
-                        required
-                        onPaste={preventPaste}
-                    />
-                    {formSubmitted && !email && (
-                        <div className="error-message">Por favor, ingresa un correo electrónico.</div>
-                    )}
-                </div>
+          {alert.show && (
+            <div className={`alert alert-${alert.type} bg-${alert.type === 'danger' ? 'red-100' : 'green-100'} text-${alert.type === 'danger' ? 'red-700' : 'green-700'} p-2 rounded`}>
+              {alert.message}
+              <button onClick={closeAlert} className="ml-2 text-sm underline">Cerrar</button>
+            </div>
+          )}
 
-                {/* Contraseña */}
-                <div className="input-box">
-                    <i className='bx bxs-lock-alt'></i>
-                    <input
-                        type="password"
-                        name="password_fake"
-                        id="password_fake"
-                        placeholder="Contraseña"
-                        value={password}
-                        onChange={handlePasswordChange}
-                        required
-                        onPaste={preventPaste}
-                    />
-                    {formSubmitted && !password && (
-                        <div className="error-message">Por favor, ingresa una contraseña.</div>
-                    )}
-                </div>
+          <form onSubmit={handleSignup} className="space-y-4 md:space-y-6">
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="Correo Electrónico"
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={() => handleBlur('email')}
+                className={`block w-full pl-10 pr-3 py-2 md:py-3 border ${touched.email && !emailValidity ? 'border-red-500' : 'border-gray-300'} rounded-md placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 text-sm md:text-base`}
+                required
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MailIcon className="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
 
-                <div className="password-validity">
-                    {formSubmitted && passwordValidity.messages.map((msg, index) => (
-                        <div key={index} className={msg.includes("✔️") ? 'valid' : 'invalid'}>
-                            {msg}
-                        </div>
-                    ))}
-                </div>
+            <div className="relative">
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={handlePasswordChange}
+                onBlur={() => handleBlur('password')}
+                className={`block w-full pl-10 pr-3 py-2 md:py-3 border ${touched.password && !passwordValidity.isValid ? 'border-red-500' : 'border-gray-300'} rounded-md placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 text-sm md:text-base`}
+                required
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <LockIcon className="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
 
-                <button type="submit" disabled={!passwordValidity.isValid || !emailValid} className="signup-btn">
-                    Registrarse
-                </button>
+            <div className="mt-2">
+              {passwordValidity.messages.map((msg, index) => (
+                <div key={index} className="text-gray-500 text-sm">{msg}</div>
+              ))}
+            </div>
 
-                <p className="register">
-                    ¿Ya tienes una cuenta?{" "}
-                    <Link to="/login">Inicia Sesión</Link>
-                </p>
-            </form>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out"
+            >
+              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                <Plane className="h-5 w-5 text-white group-hover:text-green-400" aria-hidden="true" />
+              </span>
+              Registrarse
+            </button>
+          </form>
+
+          <div className="text-center mt-4">
+            <p className="text-sm md:text-base text-gray-600">
+              ¿Ya tienes una cuenta?{' '}
+              <Link to="/login" className="font-medium text-green-600 hover:text-green-500 transition duration-150 ease-in-out">
+                Inicia sesión aquí
+              </Link>
+            </p>
+          </div>
         </div>
-    );
-};
-
-export default Signup;
+      </div>
+    </div>
+  );
+}
